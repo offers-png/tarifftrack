@@ -7,7 +7,17 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!r.ok) throw new Error(await r.text());
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Failed to create account'); }
+    return r.json();
+  },
+
+  async loginUser(email, password) {
+    const r = await fetch(`${BASE}/tariff/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Invalid email or password'); }
     return r.json();
   },
 
@@ -23,10 +33,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!r.ok) {
-      const err = await r.json();
-      throw new Error(err.detail || 'Failed to add product');
-    }
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Failed to add product'); }
     return r.json();
   },
 
@@ -48,10 +55,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: userId })
     });
-    if (!r.ok) {
-      const err = await r.json();
-      throw new Error(err.detail || 'Analysis failed');
-    }
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Analysis failed'); }
     return r.json();
   },
 
@@ -62,6 +66,16 @@ export const api = {
       body: JSON.stringify({ user_id: userId, email })
     });
     if (!r.ok) throw new Error('Checkout failed');
+    return r.json();
+  },
+
+  async cancelSubscription(userId) {
+    const r = await fetch(`${BASE}/tariff/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId })
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Cancellation failed'); }
     return r.json();
   },
 
@@ -89,18 +103,9 @@ export const api = {
 };
 
 export const COUNTRY_FLAGS = {
-  'China': '🇨🇳',
-  'Mexico': '🇲🇽',
-  'Canada': '🇨🇦',
-  'EU': '🇪🇺',
-  'Vietnam': '🇻🇳',
-  'Japan': '🇯🇵',
-  'South Korea': '🇰🇷',
-  'India': '🇮🇳',
-  'Brazil': '🇧🇷',
-  'Taiwan': '🇹🇼',
-  'Domestic (USA)': '🇺🇸',
-  'Other': '🌐'
+  'China': '🇨🇳', 'Mexico': '🇲🇽', 'Canada': '🇨🇦', 'EU': '🇪🇺',
+  'Vietnam': '🇻🇳', 'Japan': '🇯🇵', 'South Korea': '🇰🇷', 'India': '🇮🇳',
+  'Brazil': '🇧🇷', 'Taiwan': '🇹🇼', 'Domestic (USA)': '🇺🇸', 'Other': '🌐'
 };
 
 export const CATEGORIES = [

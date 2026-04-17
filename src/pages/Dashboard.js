@@ -262,6 +262,57 @@ function UpgradeModal({ user, onClose }) {
   );
 }
 
+
+// ─── Cancel Modal ─────────────────────────────────────────────────────────────
+function CancelModal({ user, onClose, onCancelled }) {
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1); // 1=confirm, 2=done
+
+  const handleCancel = async () => {
+    setLoading(true);
+    try {
+      await api.cancelSubscription(user.id);
+      setStep(2);
+      onCancelled();
+    } catch (err) {
+      alert(err.message);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+      <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '16px', padding: '40px', width: '100%', maxWidth: '420px', textAlign: 'center' }}>
+        {step === 1 ? (
+          <>
+            <div style={{ fontSize: '40px', marginBottom: '16px' }}>😢</div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 800, marginBottom: '12px' }}>Cancel Pro subscription?</h2>
+            <p style={{ color: 'var(--text2)', marginBottom: '12px', fontSize: '14px', lineHeight: 1.6 }}>
+              You'll lose access to unlimited products, unlimited AI analysis, and email alerts. Your account will revert to the Free plan.
+            </p>
+            <p style={{ color: 'var(--text3)', fontSize: '13px', marginBottom: '28px' }}>You can resubscribe anytime.</p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={onClose} style={{ flex: 1, padding: '12px', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                Keep Pro
+              </button>
+              <button onClick={handleCancel} disabled={loading} style={{ flex: 1, padding: '12px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--red)', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer' }}>
+                {loading ? 'Cancelling...' : 'Yes, cancel'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: '40px', marginBottom: '16px' }}>✅</div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 800, marginBottom: '12px' }}>Subscription cancelled</h2>
+            <p style={{ color: 'var(--text2)', marginBottom: '28px', fontSize: '14px' }}>Your account has been moved to the Free plan. Thanks for trying TariffTrack Pro.</p>
+            <button onClick={onClose} style={{ width: '100%', padding: '12px', background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Close</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -275,6 +326,7 @@ export default function Dashboard() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
   const [appliedPrices, setAppliedPrices] = useState({});
   const [activeTab, setActiveTab] = useState('products');
 
@@ -349,6 +401,10 @@ export default function Dashboard() {
       await api.markAlertsRead(unread);
       setAlerts(prev => prev.map(a => ({ ...a, read: true })));
     }
+  };
+
+  const handleCancelled = async () => {
+    await loadData();
   };
 
   const handleLogout = () => {
@@ -474,6 +530,19 @@ export default function Dashboard() {
               fontWeight: 700
             }}>
               Upgrade
+            </button>
+          )}
+          {user.plan === 'pro' && (
+            <button onClick={() => setShowCancel(true)} style={{
+              padding: '8px 14px',
+              background: 'none',
+              border: '1px solid rgba(239,68,68,0.3)',
+              color: 'var(--red)',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 500
+            }}>
+              Cancel Plan
             </button>
           )}
           <button onClick={handleLogout} style={{
@@ -988,6 +1057,13 @@ export default function Dashboard() {
         <UpgradeModal
           user={user}
           onClose={() => setShowUpgrade(false)}
+        />
+      )}
+      {showCancel && (
+        <CancelModal
+          user={user}
+          onClose={() => setShowCancel(false)}
+          onCancelled={handleCancelled}
         />
       )}
     </div>
